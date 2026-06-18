@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="certificates-header">
+    <div>
+      <p class="page-kicker">Gestão de certificados</p>
+      <h1>Certificados emitidos</h1>
+      <p>Consulte certificados, acompanhe validade, baixe artefatos e execute revogações com rastreabilidade.</p>
+    </div>
+    <div class="certificates-header-badges" aria-label="Resumo da área">
+      <span>🔐 Emitidos</span>
+      <span>⬇️ Downloads</span>
+      <span>🚫 Revogação</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<section class="certificates-toolbar card" aria-label="Resumo de certificados emitidos">
+  <div class="certificates-toolbar-main">
+    <div class="certificates-toolbar-icon" aria-hidden="true">🔐</div>
+    <div>
+      <p class="section-kicker">Inventário</p>
+      <h2><strong>{{ rows|length }}</strong> certificado(s) encontrado(s)</h2>
+      <p>Use os downloads conforme a necessidade operacional e revogue somente mediante justificativa.</p>
+    </div>
+  </div>
+
+  <div class="certificates-toolbar-actions">
+    <a class="btn btn-secondary" href="/certificates/request/new">📝 Nova solicitação</a>
+    <a class="btn btn-secondary" href="/certificates/request/external-csr">Assinar CSR externa</a>
+    <a class="btn btn-secondary" href="/certificates/requests">📋 Solicitações</a>
+  </div>
+</section>
+
+<section class="card panel-card certificates-card" aria-labelledby="issued-certificates-title">
+  <div class="certificates-card-heading">
+    <div>
+      <p class="section-kicker">Repositório</p>
+      <h2 id="issued-certificates-title">Lista de certificados</h2>
+      <p>Arquivos disponíveis por formato, geração protegida de PFX/P12 e revogação controlada.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap certificates-table-wrap">
+    <table class="certificates-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Certificado</th>
+          <th>Situação</th>
+          <th>Validade</th>
+          <th>Downloads</th>
+          <th>PFX/P12</th>
+          <th>Revogação</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for c in rows %}
+          <tr class="{% if c.status == 'revoked' %}certificate-row-revoked{% endif %}">
+            <td>
+              <strong>#{{ c.id }}</strong>
+            </td>
+
+            <td>
+              <div class="certificate-identity">
+                <span class="certificate-icon" aria-hidden="true">🔐</span>
+                <div>
+                  <strong>{{ c.common_name or '-' }}</strong>
+                  <small>{{ c.serial or '-' }}</small>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              {% if c.status == 'revoked' %}
+                <span class="badge badge-danger">Revogado</span>
+              {% elif c.status == 'issued' %}
+                <span class="badge badge-success">Emitido</span>
+              {% else %}
+                <span class="badge badge-success">{{ c.status or '-' }}</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="certificate-validity">
+                <span>
+                  {% if c.not_after %}
+                    {% if c.not_after.strftime is defined %}
+                      {{ c.not_after.strftime('%d/%m/%Y %H:%M:%S') }}
+                    {% else %}
+                      {{ c.not_after }}
+                    {% endif %}
+                  {% else %}
+                    -
+                  {% endif %}
+                </span>
+                <small>Data de expiração</small>
+              </div>
+            </td>
+
+            <td>
+              <div class="downloads certificate-downloads" aria-label="Downloads do certificado #{{ c.id }}">
+                <a class="download-link" href="/certificates/{{ c.id }}/download/pem">.pem</a>
+                <a class="download-link" href="/certificates/{{ c.id }}/download/crt">.crt</a>
+                <a class="download-link" href="/certificates/{{ c.id }}/download/cer">.cer</a>
+                <a class="download-link" href="/certificates/{{ c.id }}/download/der">.der</a>
+                <a class="download-link" href="/certificates/{{ c.id }}/download/csr">.csr</a>
+
+                {% if c.status != 'revoked' and c.key_path %}
+                  <a class="download-link" href="/certificates/{{ c.id }}/download/key">.key</a>
+                  <a class="download-link download-link-zip" href="/certificates/{{ c.id }}/download/zip">.zip</a>
+                {% elif c.status != 'revoked' %}
+                  <span class="certificate-muted">Chave externa</span>
+                {% else %}
+                  <span class="certificate-muted">Chave/ZIP bloqueados</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <td>
+              {% if c.status != 'revoked' and c.key_path %}
+                <div class="certificate-secure-downloads">
+                  <form class="inline-form secure-download-form" method="post" action="/certificates/{{ c.id }}/download/pfx">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="sr-only" for="pfx-password-{{ c.id }}">Senha PFX</label>
+                    <input id="pfx-password-{{ c.id }}" name="pfx_password" type="password" placeholder="Senha PFX" {% if not allow_unprotected_pkcs12_export %}required{% endif %} autocomplete="new-password">
+                    <button class="btn-sm" type="submit" onclick="return !this.form.export_unprotected || !this.form.export_unprotected.checked || confirm('Atenção: este PFX incluirá a chave privada sem senha. Confirma o download?')">.pfx</button>
+                    {% if allow_unprotected_pkcs12_export %}
+                      <label class="pkcs12-unprotected-option">
+                        <input type="checkbox" name="export_unprotected" value="1">
+                        Sem senha, com auditoria
+                      </label>
+                    {% endif %}
+                  </form>
+
+                  <form class="inline-form secure-download-form" method="post" action="/certificates/{{ c.id }}/download/p12">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="sr-only" for="p12-password-{{ c.id }}">Senha P12</label>
+                    <input id="p12-password-{{ c.id }}" name="pfx_password" type="password" placeholder="Senha P12" {% if not allow_unprotected_pkcs12_export %}required{% endif %} autocomplete="new-password">
+                    <button class="btn-sm" type="submit" onclick="return !this.form.export_unprotected || !this.form.export_unprotected.checked || confirm('Atenção: este P12 incluirá a chave privada sem senha. Confirma o download?')">.p12</button>
+                    {% if allow_unprotected_pkcs12_export %}
+                      <label class="pkcs12-unprotected-option">
+                        <input type="checkbox" name="export_unprotected" value="1">
+                        Sem senha, com auditoria
+                      </label>
+                    {% endif %}
+                  </form>
+                </div>
+              {% elif c.status != 'revoked' %}
+                <span class="certificate-muted">Indisponível para CSR externa</span>
+              {% else %}
+                <span class="certificate-muted">Indisponível</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if c.status != 'revoked' %}
+                <form method="post" action="/certificates/{{ c.id }}/revoke" class="revoke-form certificate-revoke-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                  <label class="sr-only" for="revoke-reason-{{ c.id }}">Motivo da revogação</label>
+                  <select id="revoke-reason-{{ c.id }}" name="reason" required>
+                    <option value="unspecified">Não Especificado</option>
+                    <option value="keyCompromise">Chave Comprometida</option>
+                    <option value="cessationOfOperation">Cessação de Operação</option>
+                    <option value="affiliationChanged">Afiliação Alterada</option>
+                    <option value="superseded">Substituída</option>
+                  </select>
+
+                  <label class="sr-only" for="revoke-comment-{{ c.id }}">Comentário da revogação</label>
+                  <input id="revoke-comment-{{ c.id }}" name="comment" placeholder="Comentário">
+
+                  <button class="btn-sm btn-danger" type="submit" onclick="return confirm('Confirma a revogação deste certificado?')">Revogar</button>
+                </form>
+              {% else %}
+                <div class="certificate-revoked-info">
+                  <strong>{{ c.revocation_reason or 'Revogado' }}</strong>
+
+                  {% if c.revoked_at %}
+                    <small>
+                      Revogado em
+                      {% if c.revoked_at.strftime is defined %}
+                        {{ c.revoked_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                      {% else %}
+                        {{ c.revoked_at }}
+                      {% endif %}
+                    </small>
+                  {% endif %}
+
+                  {% if c.revocation_comment %}
+                    <small>{{ c.revocation_comment }}</small>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7">
+              <div class="certificates-empty-state">
+                <div class="certificates-empty-icon">🔐</div>
+                <strong>Nenhum certificado emitido</strong>
+                <p>Ainda não há certificados disponíveis para download ou revogação.</p>
+                <a class="btn" href="/certificates/request/new">Criar nova solicitação</a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

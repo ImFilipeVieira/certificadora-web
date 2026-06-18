@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Documentacao | Certificadora Web{% endblock %}
+
+{% block page_header %}
+  <div>
+    <p class="page-kicker">Documentacao tecnica</p>
+    <h1>Certificadora Web</h1>
+    <p>Resumo seguro do projeto para avaliacao tecnica e portfolio.</p>
+  </div>
+{% endblock %}
+
+{% block body %}
+<section class="card">
+  <h2>Visao geral</h2>
+  <p>
+    Aplicacao Flask para gestao de certificados digitais internos, com autenticacao,
+    MFA, RBAC, auditoria, solicitacao, aprovacao, emissao, importacao, monitoramento
+    e revogacao de certificados.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Arquitetura</h2>
+  <ul>
+    <li>Backend em Flask com templates Jinja2.</li>
+    <li>Persistencia via SQLAlchemy.</li>
+    <li>Autenticacao LDAP/AD opcional ou provedor mock para demonstracao local.</li>
+    <li>Artefatos criptograficos armazenados fora do controle de versao.</li>
+    <li>Auditoria estruturada para eventos sensiveis.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Modo portfolio</h2>
+  <p>
+    O modo demo usa dados ficticios, banco SQLite local e login mock configurado por
+    variaveis de ambiente. Ele nao depende de infraestrutura interna, URLs privadas,
+    credenciais corporativas ou certificados reais.
+  </p>
+  <pre><code>DEMO_MODE=true
+AUTH_PROVIDER=mock
+APP_DATABASE_URL=sqlite:///portfolio_demo.db
+AUDIT_DATABASE_URL=sqlite:///portfolio_demo.db</code></pre>
+</section>
+
+<section class="card">
+  <h2>Seguranca</h2>
+  <ul>
+    <li>CSRF habilitado em formularios.</li>
+    <li>Permissoes aplicadas no backend por decorator de autorizacao.</li>
+    <li>Uploads de CSR limitados e validados.</li>
+    <li>Exportacao PFX/P12 sem senha desabilitada por padrao.</li>
+    <li>Chaves privadas, certificados reais, logs e arquivos locais ignorados pelo Git.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Validacao</h2>
+  <p>Execute antes de publicar ou demonstrar:</p>
+  <pre><code>python -m py_compile run.py app\__init__.py app\config.py app\models.py
+python -m unittest discover -v</code></pre>
+</section>
+{% endblock %}

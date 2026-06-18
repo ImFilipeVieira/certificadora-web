@@ -1,0 +1,15 @@
+Flask
+Flask-Login
+Flask-WTF
+SQLAlchemy
+PyMySQL
+python-dotenv
+ldap3
+pyotp
+qrcode
+cryptography
+plotly
+pandas
+openpyxl
+reportlab
+gunicorn

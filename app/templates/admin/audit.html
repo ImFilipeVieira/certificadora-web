@@ -1,0 +1,234 @@
+﻿{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="audit-header">
+    <div>
+      <p class="page-kicker">Governança e rastreabilidade</p>
+      <h1>Auditoria</h1>
+      <p>Monitore eventos, falhas, acessos, downloads e evidências operacionais da certificadora interna.</p>
+    </div>
+    <div class="audit-header-actions">
+      <a class="btn btn-secondary" href="/audit/export.csv">⇩ Exportar CSV</a>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<section class="card panel-card audit-filter-card" aria-labelledby="audit-filters-title">
+  <div class="panel-heading">
+    <div>
+      <p class="section-kicker">Consulta avançada</p>
+      <h2 id="audit-filters-title">Filtros de auditoria</h2>
+      <p>Refine a análise por período, usuário, evento, severidade, resultado ou origem.</p>
+    </div>
+  </div>
+
+  <form method="get" class="form-grid audit-filter-grid audit-filter-form">
+    <div class="filter-field">
+      <label for="audit-days">Período</label>
+      <select id="audit-days" name="days">
+        {% for d in [1,7,30,90,180,365] %}
+          <option value="{{ d }}" {% if audit_dashboard.filters.days == d %}selected{% endif %}>Últimos {{ d }} dia(s)</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label for="audit-user">Usuário</label>
+      <input id="audit-user" name="user" value="{{ audit_dashboard.filters.user }}" placeholder="ex: admin.filipe">
+    </div>
+
+    <div class="filter-field">
+      <label for="audit-event-type">Tipo de evento</label>
+      <input id="audit-event-type" name="event_type" value="{{ audit_dashboard.filters.event_type }}" placeholder="ex: login, mfa, download">
+    </div>
+
+    <div class="filter-field">
+      <label for="audit-severity">Severidade</label>
+      <select id="audit-severity" name="severity">
+        <option value="">Todas</option>
+        {% for s in ['info','warning','error','critical'] %}
+          <option value="{{ s }}" {% if audit_dashboard.filters.severity == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label for="audit-result">Resultado</label>
+      <input id="audit-result" name="result" value="{{ audit_dashboard.filters.result }}" placeholder="success, failure, denied...">
+    </div>
+
+    <div class="filter-field">
+      <label for="audit-ip">IP</label>
+      <input id="audit-ip" name="ip" value="{{ audit_dashboard.filters.ip }}" placeholder="ex: 203.0.113.10">
+    </div>
+
+    <div class="full audit-filter-actions">
+      <button type="submit">⌕ Aplicar filtros</button>
+      <a class="btn btn-secondary" href="/audit">Limpar</a>
+      <a class="btn btn-secondary" href="/audit/export.csv">Exportar CSV</a>
+    </div>
+  </form>
+</section>
+
+<section class="grid grid-3 dashboard-kpis audit-kpis" aria-label="Indicadores de auditoria">
+  <article class="stat-card kpi-card audit-kpi audit-kpi-events">
+    <div class="kpi-topline"><span class="kpi-icon">●</span><span class="stat-label">Eventos</span></div>
+    <div class="stat-value">{{ audit_dashboard.cards.total_events }}</div>
+    <p class="card-description">Eventos no período filtrado.</p>
+  </article>
+
+  <article class="stat-card kpi-card audit-kpi audit-kpi-critical">
+    <div class="kpi-topline"><span class="kpi-icon">!</span><span class="stat-label">Críticos/erro</span></div>
+    <div class="stat-value kpi-danger">{{ audit_dashboard.cards.critical_events }}</div>
+    <p class="card-description">Erros, exceções e severidades críticas.</p>
+  </article>
+
+  <article class="stat-card kpi-card audit-kpi audit-kpi-denied">
+    <div class="kpi-topline"><span class="kpi-icon">⊘</span><span class="stat-label">Acessos negados</span></div>
+    <div class="stat-value kpi-warning">{{ audit_dashboard.cards.denied_events }}</div>
+    <p class="card-description">Tentativas sem permissão.</p>
+  </article>
+
+  <article class="stat-card kpi-card audit-kpi audit-kpi-login">
+    <div class="kpi-topline"><span class="kpi-icon">🔑</span><span class="stat-label">Falhas de login</span></div>
+    <div class="stat-value kpi-danger">{{ audit_dashboard.cards.login_failures }}</div>
+    <p class="card-description">Falhas LDAP/senha/bloqueios.</p>
+  </article>
+
+  <article class="stat-card kpi-card audit-kpi audit-kpi-mfa">
+    <div class="kpi-topline"><span class="kpi-icon">🛡</span><span class="stat-label">Falhas MFA</span></div>
+    <div class="stat-value kpi-warning">{{ audit_dashboard.cards.mfa_failures }}</div>
+    <p class="card-description">Códigos MFA inválidos.</p>
+  </article>
+
+  <article class="stat-card kpi-card audit-kpi audit-kpi-downloads">
+    <div class="kpi-topline"><span class="kpi-icon">⇩</span><span class="stat-label">Downloads</span></div>
+    <div class="stat-value">{{ audit_dashboard.cards.downloads }}</div>
+    <p class="card-description">Downloads de certificados.</p>
+  </article>
+</section>
+
+<div class="audit-main-grid audit-pro-grid">
+  <section class="card panel panel-12 panel-card chart-panel audit-featured-chart" aria-labelledby="timeline-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Linha do tempo</p>
+        <h2 id="timeline-title">Volume de eventos</h2>
+        <p>Evolução diária dos eventos auditados.</p>
+      </div>
+    </div>
+    <div class="chart-shell">{{ audit_dashboard.charts.timeline|safe }}</div>
+  </section>
+
+  <section class="card panel panel-4 panel-card chart-panel-sm" aria-labelledby="categories-title">
+    <div class="panel-heading"><div><p class="section-kicker">Classificação</p><h2 id="categories-title">Categorias</h2><p>Distribuição por categoria.</p></div></div>
+    <div class="chart-shell">{{ audit_dashboard.charts.categories|safe }}</div>
+  </section>
+
+  <section class="card panel panel-4 panel-card chart-panel-sm" aria-labelledby="severity-title">
+    <div class="panel-heading"><div><p class="section-kicker">Criticidade</p><h2 id="severity-title">Severidade</h2><p>Eventos por nível de severidade.</p></div></div>
+    <div class="chart-shell">{{ audit_dashboard.charts.severity|safe }}</div>
+  </section>
+
+  <section class="card panel panel-4 panel-card chart-panel-sm" aria-labelledby="security-title">
+    <div class="panel-heading"><div><p class="section-kicker">Ameaças</p><h2 id="security-title">Segurança</h2><p>Falhas, bloqueios e acessos negados.</p></div></div>
+    <div class="chart-shell">{{ audit_dashboard.charts.security|safe }}</div>
+  </section>
+
+  <section class="card panel panel-6 panel-card chart-panel" aria-labelledby="users-title">
+    <div class="panel-heading"><div><p class="section-kicker">Atividade</p><h2 id="users-title">Usuários ativos</h2><p>Usuários com mais eventos no filtro.</p></div></div>
+    <div class="chart-shell">{{ audit_dashboard.charts.users|safe }}</div>
+  </section>
+
+  <section class="card panel panel-6 panel-card chart-panel" aria-labelledby="ips-title">
+    <div class="panel-heading"><div><p class="section-kicker">Origem</p><h2 id="ips-title">Origem por IP</h2><p>Endereços de origem com maior volume.</p></div></div>
+    <div class="chart-shell">{{ audit_dashboard.charts.ips|safe }}</div>
+  </section>
+
+  <section class="card panel panel-5 panel-card audit-insights-panel" aria-labelledby="audit-insights-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Investigação</p>
+        <h2 id="audit-insights-title">Insights de auditoria</h2>
+        <p>Alertas automáticos para investigação e priorização.</p>
+      </div>
+    </div>
+    <div class="insight-list">
+      {% for i in audit_dashboard.insights %}
+        <article class="insight insight-{{ i.level }}"><strong>{{ i.title }}</strong><p>{{ i.text }}</p></article>
+      {% else %}
+        <article class="insight insight-success"><strong>Nenhum alerta relevante</strong><p>Não foram encontrados sinais automáticos para investigação no filtro atual.</p></article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card panel panel-7 panel-card panel-table-fill" aria-labelledby="top-users-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Ranking</p>
+        <h2 id="top-users-title">Top usuários</h2>
+        <p>Usuários com maior volume de eventos no filtro.</p>
+      </div>
+    </div>
+    <div class="table-wrap compact-table pro-table-wrap">
+      <table>
+        <thead><tr><th>Usuário</th><th>Eventos</th></tr></thead>
+        <tbody>
+          {% for u in audit_dashboard.top_users %}
+            <tr><td><strong>{{ u.usuario }}</strong></td><td><span class="badge badge-info">{{ u.total }}</span></td></tr>
+          {% else %}
+            <tr><td colspan="2"><div class="table-empty-state">Nenhum usuário encontrado no filtro atual.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card panel panel-12 panel-card audit-events-panel" aria-labelledby="recent-filtered-events-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Evidências</p>
+        <h2 id="recent-filtered-events-title">Eventos recentes filtrados</h2>
+        <p>Últimos 300 eventos conforme filtros aplicados.</p>
+      </div>
+    </div>
+    <div class="table-wrap compact-table pro-table-wrap audit-events-table">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>UTC</th><th>Evento</th><th>Categoria</th><th>Severidade</th><th>Resultado</th><th>Usuário</th><th>IP</th><th>Endpoint</th><th>Mensagem</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in audit_dashboard.recent_events %}
+            <tr>
+              <td><strong>#{{ e.id }}</strong></td>
+              <td>{{ e.timestamp_utc|br_time }}</td>
+              <td><span class="badge badge-info">{{ e.event_type }}</span></td>
+              <td>{{ e.event_category }}</td>
+              <td>
+                {% if e.severity in ['error','critical'] %}
+                  <span class="badge badge-danger">{{ e.severity }}</span>
+                {% elif e.severity == 'warning' %}
+                  <span class="badge badge-warning">{{ e.severity }}</span>
+                {% else %}
+                  <span class="badge">{{ e.severity }}</span>
+                {% endif %}
+              </td>
+              <td>{{ e.result }}</td>
+              <td>{{ e.actor_username }}</td>
+              <td><code>{{ e.ip_address }}</code></td>
+              <td><code>{{ e.endpoint }}</code></td>
+              <td class="audit-message-cell">{{ e.message }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="10"><div class="table-empty-state">Nenhum evento encontrado para os filtros aplicados.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+

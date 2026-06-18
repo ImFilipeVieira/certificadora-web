@@ -1,0 +1,229 @@
+﻿{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="request-header">
+    <div>
+      <p class="page-kicker">Emissão de certificado</p>
+      <h1>Nova solicitação</h1>
+      <p>Preencha os dados técnicos e administrativos para análise e emissão do certificado digital interno.</p>
+    </div>
+    <div class="request-header-badges" aria-label="Resumo da solicitação">
+      <span>📝 Solicitação</span>
+      <span>🔐 Certificado</span>
+      <span>✓ Aprovação</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<section class="request-intro card" aria-label="Orientações para nova solicitação">
+  <div class="request-intro-main">
+    <div class="request-intro-icon" aria-hidden="true">📝</div>
+    <div>
+      <p class="section-kicker">Formulário guiado</p>
+      <h2>Dados da solicitação</h2>
+      <p>Informe corretamente CN, SANs, validade e justificativa. Esses dados serão usados para análise, auditoria e emissão.</p>
+    </div>
+  </div>
+  <div class="request-intro-note">
+    <strong>Importante</strong>
+    <span>Revise nomes DNS, IPs e e-mails antes de enviar.</span>
+  </div>
+</section>
+
+<form method="post" class="request-form-pro" aria-labelledby="request-form-title">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <section class="card request-section-card" aria-labelledby="request-form-title">
+    <div class="request-section-heading">
+      <div>
+        <p class="section-kicker">Identificação</p>
+        <h2 id="request-form-title">Informações principais</h2>
+        <p>Dados básicos que identificam o certificado e seu escopo de uso.</p>
+      </div>
+    </div>
+
+    <div class="form-grid request-form-grid">
+      <div>
+        <label for="cert-type">Tipo de certificado</label>
+        <select id="cert-type" name="cert_type">
+          <option>Servidor Web</option>
+          <option>Cliente</option>
+          <option>Usuário</option>
+          <option>Equipamento</option>
+          <option>Serviço</option>
+          <option>Assinatura de Código</option>
+          <option>Outro</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="common-name">Nome comum (CN)</label>
+        <input id="common-name" name="common_name" placeholder="ex: system.example.com" required>
+      </div>
+
+      <div>
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" value="{{ defaults.email }}" placeholder="owner@example.com">
+      </div>
+
+      <div>
+        <label for="environment">Ambiente</label>
+        <input id="environment" name="environment" placeholder="Produção/Homologação/Desenvolvimento/Teste">
+      </div>
+    </div>
+  </section>
+
+  <section class="card request-section-card" aria-labelledby="subject-title">
+    <div class="request-section-heading">
+      <div>
+        <p class="section-kicker">Assunto (Subject)</p>
+        <h2 id="subject-title">Dados da entidade</h2>
+        <p>Informações que compõem o assunto do certificado.</p>
+      </div>
+    </div>
+
+    <div class="form-grid request-form-grid">
+      <div>
+        <label for="org-unit">Unidade organizacional (OU)</label>
+        <input id="org-unit" name="org_unit" value="{{ defaults.org_unit }}">
+      </div>
+
+      <div>
+        <label for="organization">Organização (O)</label>
+        <input id="organization" name="organization" value="{{ defaults.organization }}">
+      </div>
+
+      <div>
+        <label for="locality">Cidade (L)</label>
+        <input id="locality" name="locality" value="{{ defaults.locality }}">
+      </div>
+
+      <div>
+        <label for="state">Estado (S)</label>
+        <input id="state" name="state" value="{{ defaults.state }}">
+      </div>
+
+      <div>
+        <label for="country">País (C)</label>
+        <input id="country" name="country" value="{{ defaults.country }}" maxlength="2" placeholder="BR">
+      </div>
+
+      <div>
+        <label for="area">Área solicitante</label>
+        <input id="area" name="area" placeholder="ex: Tecnologia, Segurança, Operações">
+      </div>
+    </div>
+  </section>
+
+  <section class="card request-section-card" aria-labelledby="crypto-title">
+    <div class="request-section-heading">
+      <div>
+        <p class="section-kicker">Criptografia</p>
+        <h2 id="crypto-title">Parâmetros técnicos</h2>
+        <p>Defina validade e algoritmo conforme o padrão técnico aprovado.</p>
+      </div>
+    </div>
+
+    <div class="form-grid request-form-grid">
+      <div>
+        <label for="validity-days">Validade solicitada em dias</label>
+        <input id="validity-days" name="validity_days" type="number" min="1" max="3650" value="365">
+      </div>
+
+      <div>
+        <label for="key-algorithm">Algoritmo</label>
+        <select id="key-algorithm" name="key_algorithm">
+          <option>RSA</option>
+          <option>ECDSA</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="rsa-key-size">Tamanho RSA</label>
+        <select id="rsa-key-size" name="rsa_key_size">
+          <option>2048</option>
+          <option>3072</option>
+          <option>4096</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="technical-owner">Responsável técnico</label>
+        <input id="technical-owner" name="technical_owner" placeholder="Nome ou usuário do responsável">
+      </div>
+    </div>
+  </section>
+
+  <section class="card request-section-card" aria-labelledby="san-title">
+    <div class="request-section-heading">
+      <div>
+        <p class="section-kicker">Nomes alternativos (SAN)</p>
+        <h2 id="san-title">SANs do certificado</h2>
+        <p>Informe nomes alternativos separados por espaço. Utilize apenas valores necessários ao escopo solicitado.</p>
+      </div>
+    </div>
+
+    <div class="form-grid request-form-grid">
+      <div class="full">
+        <label for="san-dns">DNS SAN</label>
+        <input id="san-dns" name="san_dns" placeholder="ex: system.example.com api.example.com">
+        <small class="request-help">DNS separados por espaço.</small>
+      </div>
+
+      <div class="full">
+        <label for="san-ip">IP SAN</label>
+        <input id="san-ip" name="san_ip" placeholder="ex: 203.0.113.10 203.0.113.11">
+        <small class="request-help">IPs separados por espaço.</small>
+      </div>
+
+      <div class="full">
+        <label for="san-email">E-mail SAN</label>
+        <input id="san-email" name="san_email" placeholder="ex: user@example.com service@example.com">
+        <small class="request-help">E-mails separados por espaço.</small>
+      </div>
+
+      <div class="full">
+        <label for="san-uri">URI SAN</label>
+        <input id="san-uri" name="san_uri" placeholder="ex: urn:service:demo https://service.example.com">
+        <small class="request-help">URIs separadas por espaço.</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="card request-section-card" aria-labelledby="business-title">
+    <div class="request-section-heading">
+      <div>
+        <p class="section-kicker">Justificativa</p>
+        <h2 id="business-title">Contexto de negócio</h2>
+        <p>Explique a finalidade da emissão para apoiar a análise e manter rastreabilidade.</p>
+      </div>
+    </div>
+
+    <div class="form-grid request-form-grid">
+      <div class="full">
+        <label for="justification">Justificativa</label>
+        <textarea id="justification" name="justification" placeholder="Descreva a necessidade do certificado, sistema envolvido e finalidade de uso."></textarea>
+      </div>
+
+      <div class="full">
+        <label for="notes">Observações</label>
+        <textarea id="notes" name="notes" placeholder="Inclua informações complementares, janelas de implantação ou dependências."></textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="request-submit-card card" aria-label="Enviar solicitação">
+    <div>
+      <strong>Pronto para enviar?</strong>
+      <p>Confirme se os dados técnicos, SANs e justificativa estão corretos antes de submeter.</p>
+    </div>
+    <div class="request-submit-actions">
+      <a class="btn btn-secondary" href="/certificates/requests">Ver solicitações</a>
+      <button type="submit">Enviar solicitação</button>
+    </div>
+  </section>
+</form>
+{% endblock %}
+
+

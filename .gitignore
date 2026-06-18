@@ -1,0 +1,100 @@
+# Python
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+
+.venv/
+venv/
+env/
+
+# IDE
+
+.vscode/
+.idea/
+
+# Environment Variables
+
+.env
+.env.*
+!.env.example
+
+# Logs
+
+*.log
+logs/
+
+# Testing
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build
+
+build/
+dist/
+*.egg-info/
+
+# OS Files
+
+Thumbs.db
+.DS_Store
+
+# Certificates and Keys
+
+*.key
+*.pem
+*.csr
+*.crt
+*.cer
+*.pfx
+*.p12
+
+# Certificate Authority
+
+ca/
+
+# Storage
+
+storage/
+
+# Backups
+
+backup/
+backups/
+
+# Database
+
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary Files
+
+tmp/
+temp/
+
+# Cache
+
+.cache/
+
+# Security Artifacts
+
+secrets/
+private/
+sensitive/
+
+# Audit Exports
+
+audit_exports/
+
+# Windows virtualenv directories
+
+Lib/
+Scripts/
+pyvenv.cfg
+share/
+Include/

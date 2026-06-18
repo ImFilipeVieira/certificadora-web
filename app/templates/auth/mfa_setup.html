@@ -1,0 +1,111 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Cadastrar MFA | Certificadora Web{% endblock %}
+
+{% block shell %}
+<div class="login-page mfa-page">
+  <div class="login-card mfa-card">
+
+    <section class="mfa-panel-main">
+      <div class="login-brand mfa-brand">
+        <img
+          src="/assets/logo.png"
+          alt="Logo Example Organization"
+          onerror="this.style.display='none'"
+        >
+
+        <div>
+          <p class="mfa-kicker">Validação em duas etapas</p>
+          <h1>Cadastrar MFA</h1>
+          <p>
+            Configure seu aplicativo autenticador para proteger o acesso à Certificadora.
+          </p>
+        </div>
+      </div>
+
+      <div class="mfa-instructions">
+        <strong>Como configurar</strong>
+        <ol>
+          <li>Abra o Microsoft Authenticator.</li>
+          <li>Escolha a opção para adicionar uma nova conta.</li>
+          <li>Leia o QR Code abaixo com a câmera do aplicativo.</li>
+          <li>Informe o código de 6 dígitos gerado para concluir o cadastro.</li>
+        </ol>
+      </div>
+
+      <div class="mfa-qr-section">
+        <div class="mfa-qr-frame">
+          <img
+            src="data:image/png;base64,{{ qr }}"
+            alt="QR Code para cadastro MFA"
+          >
+        </div>
+
+        <p class="mfa-qr-help">
+          O QR Code é individual e deve ser utilizado apenas no seu dispositivo autenticador.
+        </p>
+      </div>
+
+      <form method="post" class="mfa-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mfa-field">
+          <label for="code">Código MFA</label>
+          <input
+            id="code"
+            name="code"
+            placeholder="000000"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            required
+          >
+          <small>Digite o código de 6 dígitos exibido no aplicativo autenticador.</small>
+        </div>
+
+        <button type="submit" class="mfa-submit">
+          Validar e continuar
+        </button>
+      </form>
+    </section>
+
+    <aside class="mfa-panel-side">
+      <div class="mfa-security-card">
+        <div class="mfa-security-icon">🛡</div>
+
+        <h2>Por que isso é necessário?</h2>
+
+        <p>
+          A autenticação multifator adiciona uma camada extra de proteção ao seu acesso,
+          reduzindo o risco de uso indevido mesmo que a senha seja comprometida.
+        </p>
+
+        <div class="mfa-security-list">
+          <div>
+            <strong>1</strong>
+            <span>Confirma sua identidade</span>
+          </div>
+
+          <div>
+            <strong>2</strong>
+            <span>Protege operações sensíveis</span>
+          </div>
+
+          <div>
+            <strong>3</strong>
+            <span>Reforça a auditoria do sistema</span>
+          </div>
+        </div>
+
+        <p class="mfa-side-note">
+          Caso troque de aparelho ou perca acesso ao autenticador, solicite a redefinição do MFA
+          a um administrador autorizado.
+        </p>
+      </div>
+    </aside>
+
+  </div>
+</div>
+{% endblock %}
+

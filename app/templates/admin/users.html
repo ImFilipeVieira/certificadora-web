@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="users-header">
+    <div>
+      <p class="page-kicker">Governança de acesso</p>
+      <h1>Usuários</h1>
+      <p>Administre situação, MFA, bloqueios e associação de usuários aos grupos de permissões.</p>
+    </div>
+    <div class="users-header-badges" aria-label="Resumo da área">
+      <span>👤 Usuários</span>
+      <span>🧩 Grupos</span>
+      <span>🛡️ Segurança</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<nav class="gov-tabs users-tabs" aria-label="Navegação de governança">
+  <a class="active" href="/users/" aria-current="page">👤 Usuários</a>
+  <a href="/users/groups">🧩 Grupo de permissões</a>
+  <a href="/audit">📊 Auditoria</a>
+</nav>
+
+<section class="users-toolbar card" aria-label="Resumo e ações de usuários">
+  <div class="users-toolbar-main">
+    <div class="users-toolbar-icon" aria-hidden="true">👥</div>
+    <div>
+      <p class="section-kicker">Base carregada</p>
+      <h2><strong>{{ rows|length }}</strong> usuário(s) carregado(s)</h2>
+      <p>Revise o provisionamento, os grupos atribuídos e as ações administrativas disponíveis.</p>
+    </div>
+  </div>
+  <div class="users-toolbar-actions">
+    <a class="btn btn-secondary" href="/users/groups">▦ Editar grupos</a>
+  </div>
+</section>
+
+<section class="card gov-table-card users-table-card" aria-labelledby="users-list-title">
+  <div class="users-table-heading">
+    <div>
+      <p class="section-kicker">Controle operacional</p>
+      <h2 id="users-list-title">Usuários provisionados</h2>
+      <p>Gerencie vínculos, redefinição de MFA, desbloqueio e habilitação de contas.</p>
+    </div>
+  </div>
+
+  <div class="table-wrap gov-table users-table-wrap">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Usuário</th>
+          <th>Situação</th>
+          <th>Grupos</th>
+          <th>Alterar grupos</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          {% set u = row.user %}
+          <tr>
+            <td>
+              <div class="gov-user users-user-cell">
+                <span class="gov-avatar users-avatar">{{ u.username[:1]|upper }}</span>
+                <div>
+                  <strong>{{ u.username }}</strong>
+                  <small>{{ u.display_name or 'Sem nome' }} · {{ u.email or 'Sem e-mail' }}</small>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div class="gov-status users-status-stack">
+                {% if u.enabled %}
+                  <span class="badge badge-success">Ativo</span>
+                {% else %}
+                  <span class="badge badge-danger">Desabilitado</span>
+                {% endif %}
+
+                {% if u.mfa_enabled %}
+                  <span class="badge badge-success">MFA OK</span>
+                {% else %}
+                  <span class="badge badge-warning">MFA pendente</span>
+                {% endif %}
+
+                {% if (u.failed_login_attempts or 0) > 0 %}
+                  <span class="badge badge-warning">{{ u.failed_login_attempts or 0 }} falha(s)</span>
+                {% else %}
+                  <span class="badge">0 falha(s)</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <td>
+              <div class="gov-chips users-group-chips">
+                {% for name in row.group_names %}
+                  <span>{{ name }}</span>
+                {% else %}
+                  <em>Sem grupos</em>
+                {% endfor %}
+              </div>
+            </td>
+
+            <td>
+              <form method="post" action="/users/{{ u.id }}/groups" class="gov-group-form users-group-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="users-checks-heading">
+                  <span>Grupos disponíveis</span>
+                  <em>{{ groups|length }} item(ns)</em>
+                </div>
+
+                <div class="gov-checks users-checks">
+                  {% for g in groups %}
+                    <label>
+                      <input type="checkbox" name="group_ids" value="{{ g.id }}" {% if g.id in row.group_ids %}checked{% endif %}>
+                      <span>{{ g.name }}</span>
+                    </label>
+                  {% else %}
+                    <div class="users-empty-inline">Nenhum grupo cadastrado.</div>
+                  {% endfor %}
+                </div>
+
+                <button class="btn-sm" type="submit">Salvar grupos</button>
+              </form>
+            </td>
+
+            <td>
+              <div class="gov-actions users-actions">
+                <form method="post" action="/users/{{ u.id }}/reset-mfa">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn-sm btn-warning" type="submit">Redefinir MFA</button>
+                </form>
+
+                <form method="post" action="/users/{{ u.id }}/unlock">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn-sm" type="submit">Desbloquear</button>
+                </form>
+
+                {% if u.enabled %}
+                  <form method="post" action="/users/{{ u.id }}/disable">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn-sm btn-danger" type="submit">Desabilitar</button>
+                  </form>
+                {% else %}
+                  <form method="post" action="/users/{{ u.id }}/enable">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn-sm" type="submit">Habilitar</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="5">
+              <div class="users-empty-state">
+                <div class="users-empty-icon">👤</div>
+                <strong>Nenhum usuário carregado</strong>
+                <p>Não há usuários disponíveis para gerenciamento no momento.</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

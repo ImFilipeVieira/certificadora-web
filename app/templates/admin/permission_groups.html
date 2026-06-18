@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="permissions-header">
+    <div>
+      <p class="page-kicker">Governança de acesso</p>
+      <h1>Grupo de permissões</h1>
+      <p>Gerencie perfis, permissões e responsabilidades de acesso da Certificadora Interna.</p>
+    </div>
+    <div class="permissions-header-badges" aria-label="Contexto da área">
+      <span>👤 Perfis</span>
+      <span>🔐 Permissões</span>
+      <span>🛡️ Governança</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<nav class="gov-tabs permissions-tabs" aria-label="Navegação de governança">
+  <a href="/users/">👤 Usuários</a>
+  <a class="active" href="/users/groups" aria-current="page">🧩 Grupo de permissões</a>
+  <a href="/audit">📊 Auditoria</a>
+</nav>
+
+<section class="card gov-create permissions-create-card" aria-labelledby="create-group-title">
+  <div class="permissions-create-heading">
+    <div>
+      <p class="section-kicker">Novo perfil</p>
+      <h2 id="create-group-title">Criar grupo de permissões</h2>
+      <p>Crie um perfil reutilizável para atribuir permissões aos usuários com mais segurança e padronização.</p>
+    </div>
+  </div>
+
+  <form method="post" action="/users/groups/create" class="permissions-create-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div>
+      <label for="new-group-name">Novo grupo</label>
+      <input id="new-group-name" name="name" placeholder="Ex.: Operadores" required>
+    </div>
+
+    <div>
+      <label for="new-group-description">Descrição</label>
+      <input id="new-group-description" name="description" placeholder="Descrição curta do escopo do grupo">
+    </div>
+
+    <button type="submit">+ Criar grupo</button>
+  </form>
+</section>
+
+<section class="permissions-section" aria-labelledby="groups-list-title">
+  <div class="permissions-section-heading">
+    <div>
+      <p class="section-kicker">Perfis existentes</p>
+      <h2 id="groups-list-title">Grupos cadastrados</h2>
+      <p>Edite nome, descrição e permissões vinculadas a cada grupo.</p>
+    </div>
+    <span class="permissions-count">{{ group_rows|length }} grupo(s)</span>
+  </div>
+
+  <div class="gov-group-list permissions-group-list">
+    {% for gr in group_rows %}
+      {% set g = gr.group %}
+      <form method="post" action="/users/groups/{{ g.id }}/update" class="card gov-group-row permissions-group-card">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="permissions-group-main">
+          <div class="permissions-group-icon" aria-hidden="true">▦</div>
+
+          <div class="permissions-group-fields">
+            <div>
+              <label for="group-name-{{ g.id }}">Nome do grupo</label>
+              <input id="group-name-{{ g.id }}" name="name" value="{{ g.name }}" required>
+            </div>
+
+            <div>
+              <label for="group-description-{{ g.id }}">Descrição</label>
+              <input id="group-description-{{ g.id }}" name="description" value="{{ g.description or '' }}" placeholder="Descrição">
+            </div>
+          </div>
+
+          <div class="permissions-group-meta">
+            <span class="permissions-pill">{{ gr.permission_count }} permissão(ões)</span>
+            <button class="btn-sm" type="submit">Salvar</button>
+          </div>
+        </div>
+
+        <details class="permissions-collapse">
+          <summary>
+            <span>Editar permissões</span>
+            <small>Selecionar capacidades deste grupo</small>
+          </summary>
+
+          <div class="permissions-grid-toolbar">
+            <span>Permissões disponíveis</span>
+            <em>{{ permissions|length }} item(ns)</em>
+          </div>
+
+          <div class="gov-perm-grid permissions-grid">
+            {% for p in permissions %}
+              <label class="permission-check-card">
+                <input type="checkbox" name="permission_ids" value="{{ p.id }}" {% if p.id in gr.permission_ids %}checked{% endif %}>
+                <span>{{ p.description or p.code }}</span>
+                <small>{{ p.code }}</small>
+              </label>
+            {% else %}
+              <div class="permissions-empty-state">
+                Nenhuma permissão cadastrada para vincular a este grupo.
+              </div>
+            {% endfor %}
+          </div>
+        </details>
+      </form>
+    {% else %}
+      <div class="card permissions-empty-page">
+        <div class="permissions-empty-icon">▦</div>
+        <h2>Nenhum grupo cadastrado</h2>
+        <p>Crie o primeiro grupo de permissões para começar a organizar os acessos da aplicação.</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

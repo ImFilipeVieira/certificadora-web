@@ -1,0 +1,133 @@
+﻿{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="request-header">
+    <div>
+      <p class="page-kicker">Assinatura de CSR externa</p>
+      <h1>Assinar CSR externa</h1>
+      <p>Envie uma Certificate Signing Request gerada por equipamento ou sistema externo para aprovação e assinatura pela CA interna.</p>
+    </div>
+    <div class="request-header-badges" aria-label="Resumo do fluxo">
+      <span>CSR externa</span>
+      <span>Aprovação</span>
+      <span>Certificado assinado</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<section class="request-intro card" aria-label="Orientações para assinatura de CSR externa">
+  <div class="request-intro-main">
+    <div class="request-intro-icon" aria-hidden="true">CSR</div>
+    <div>
+      <p class="section-kicker">Equipamentos e sistemas externos</p>
+      <h2>Assinatura sem importar chave privada</h2>
+      <p>A chave privada permanece no equipamento de origem. O sistema valida a CSR, registra a solicitação e emite apenas o certificado assinado após aprovação.</p>
+    </div>
+  </div>
+  <div class="request-intro-note">
+    <strong>Importante</strong>
+    <span>Confirme CN e SANs no equipamento antes de enviar a CSR.</span>
+  </div>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="request-form-pro" aria-labelledby="external-csr-form-title">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <section class="card request-section-card" aria-labelledby="external-csr-form-title">
+    <div class="request-section-heading">
+      <div>
+        <p class="section-kicker">CSR</p>
+        <h2 id="external-csr-form-title">Conteúdo da solicitação</h2>
+        <p>Use upload de arquivo ou cole o conteúdo PEM. Informe apenas uma das opções.</p>
+      </div>
+    </div>
+
+    <div class="form-grid request-form-grid">
+      <div class="full">
+        <label for="csr-file">Upload da CSR</label>
+        <input id="csr-file" name="csr_file" type="file" accept=".csr,.pem,.txt">
+        <small class="request-help">Formatos aceitos: .csr, .pem ou .txt em PEM textual.</small>
+      </div>
+
+      <div class="full">
+        <label for="csr-pem">Colar CSR PEM</label>
+        <textarea id="csr-pem" name="csr_pem" class="external-csr-textarea" placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;...&#10;-----END CERTIFICATE REQUEST-----"></textarea>
+        <small class="request-help">A CSR deve conter uma assinatura interna válida, CN obrigatório e chave RSA 2048+ ou ECDSA aprovada.</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="card request-section-card" aria-labelledby="external-csr-context-title">
+    <div class="request-section-heading">
+      <div>
+        <p class="section-kicker">Contexto</p>
+        <h2 id="external-csr-context-title">Dados administrativos</h2>
+        <p>Essas informações apoiam aprovação, auditoria e rastreabilidade operacional.</p>
+      </div>
+    </div>
+
+    <div class="form-grid request-form-grid">
+      <div>
+        <label for="cert-type">Tipo de certificado</label>
+        <select id="cert-type" name="cert_type">
+          <option>Equipamento</option>
+          <option>Servidor Web</option>
+          <option>Serviço</option>
+          <option>Firewall</option>
+          <option>Switch</option>
+          <option>Câmera IP</option>
+          <option>Outro</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="validity-days">Validade solicitada em dias</label>
+        <input id="validity-days" name="validity_days" type="number" min="1" max="{{ config.MAX_CERT_VALIDITY_DAYS }}" value="365">
+      </div>
+
+      <div>
+        <label for="email">E-mail responsável</label>
+        <input id="email" name="email" type="email" value="{{ defaults.email }}" placeholder="owner@example.com">
+      </div>
+
+      <div>
+        <label for="environment">Ambiente</label>
+        <input id="environment" name="environment" placeholder="Produção/Homologação/Desenvolvimento/Teste">
+      </div>
+
+      <div>
+        <label for="technical-owner">Responsável técnico</label>
+        <input id="technical-owner" name="technical_owner" placeholder="Nome ou usuário do responsável">
+      </div>
+
+      <div>
+        <label for="area">Área solicitante</label>
+        <input id="area" name="area" placeholder="ex: Tecnologia, Segurança, Operações">
+      </div>
+
+      <div class="full">
+        <label for="justification">Justificativa</label>
+        <textarea id="justification" name="justification" placeholder="Descreva o equipamento, local de instalação, finalidade do certificado e responsável pelo ciclo de vida."></textarea>
+      </div>
+
+      <div class="full">
+        <label for="notes">Observações</label>
+        <textarea id="notes" name="notes" placeholder="Inclua informações complementares, janela de instalação ou referência do chamado."></textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="request-submit-card card" aria-label="Enviar CSR externa">
+    <div>
+      <strong>Enviar para aprovação?</strong>
+      <p>O certificado será emitido somente após revisão e aprovação da solicitação.</p>
+    </div>
+    <div class="request-submit-actions">
+      <a class="btn btn-secondary" href="/certificates/requests">Ver solicitações</a>
+      <button type="submit">Enviar CSR externa</button>
+    </div>
+  </section>
+</form>
+{% endblock %}
+

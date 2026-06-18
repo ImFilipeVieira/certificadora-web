@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="cert-monitor-header">
+    <div>
+      <p class="page-kicker">Monitoramento</p>
+      <h1>Certificados por grupo</h1>
+      <p>Organize certificados emitidos ou importados, acompanhe vencimentos e mantenha rastreabilidade.</p>
+    </div>
+    <div class="cert-monitor-header-badges" aria-label="Resumo do monitoramento">
+      <span>{{ summary.total }} monitorado(s)</span>
+      <span>{{ summary.expired }} vencido(s)</span>
+      <span>{{ summary.expiring_30 }} em 30 dias</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<section class="cert-monitor-summary" aria-label="Resumo de validade">
+  <div class="cert-monitor-metric">
+    <small>Total filtrado</small>
+    <strong>{{ summary.total }}</strong>
+  </div>
+  <div class="cert-monitor-metric danger">
+    <small>Vencidos</small>
+    <strong>{{ summary.expired }}</strong>
+  </div>
+  <div class="cert-monitor-metric danger">
+    <small>Até 7 dias</small>
+    <strong>{{ summary.expiring_7 }}</strong>
+  </div>
+  <div class="cert-monitor-metric warning">
+    <small>Até 30 dias</small>
+    <strong>{{ summary.expiring_30 }}</strong>
+  </div>
+  <div class="cert-monitor-metric success">
+    <small>Válidos</small>
+    <strong>{{ summary.valid }}</strong>
+  </div>
+</section>
+
+<nav class="cert-monitor-tabs" aria-label="Áreas do monitoramento">
+  <a class="cert-monitor-tab-action" href="#certificados">
+    <span class="cert-monitor-tab-icon">🔐</span>
+    <span>
+      <strong>Certificados monitorados</strong>
+      <small>Inventário, filtros e vencimentos</small>
+    </span>
+  </a>
+  <a class="cert-monitor-tab-action" href="#grupos">
+    <span class="cert-monitor-tab-icon">👥</span>
+    <span>
+      <strong>Grupos</strong>
+      <small>Organização por sistema ou área</small>
+    </span>
+  </a>
+  <a class="cert-monitor-tab-action" href="#importacao">
+    <span class="cert-monitor-tab-icon">📥</span>
+    <span>
+      <strong>Importação</strong>
+      <small>Adicionar certificado existente</small>
+    </span>
+  </a>
+</nav>
+
+<section id="certificados" class="cert-monitor-panel" aria-labelledby="certificate-monitoring-title">
+  <form class="card cert-monitor-tool cert-monitor-filter-card" method="get" action="/certificates/monitoring">
+    <div class="cert-monitor-tool-heading">
+      <p class="section-kicker">Filtros</p>
+      <h2>Encontrar certificado</h2>
+      <p>Busque por nome, emissor, serial ou fingerprint e refine por grupo ou vencimento.</p>
+    </div>
+    <div class="cert-monitor-form-grid cert-monitor-filter-grid">
+      <div class="full">
+        <label for="filter-q">Busca</label>
+        <input id="filter-q" name="q" value="{{ filters.q }}" placeholder="Nome comum, emissor, serial ou fingerprint">
+      </div>
+      <div>
+        <label for="filter-group">Grupo</label>
+        <select id="filter-group" name="group_id">
+          <option value="">Todos</option>
+          <option value="none" {% if filters.group_id == 'none' %}selected{% endif %}>Sem grupo</option>
+          {% for group in groups %}
+            <option value="{{ group.id }}" {% if filters.group_id == group.id|string %}selected{% endif %}>{{ group.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="filter-status">Situação</label>
+        <select id="filter-status" name="status">
+          <option value="">Todos</option>
+          <option value="valid" {% if filters.status == 'valid' %}selected{% endif %}>Válido</option>
+          <option value="expiring" {% if filters.status == 'expiring' %}selected{% endif %}>Próximo do vencimento</option>
+          <option value="expired" {% if filters.status == 'expired' %}selected{% endif %}>Vencido</option>
+          <option value="revoked" {% if filters.status == 'revoked' %}selected{% endif %}>Revogado</option>
+        </select>
+      </div>
+      <div>
+        <label for="filter-period">Vencimento</label>
+        <select id="filter-period" name="period">
+          <option value="">Qualquer período</option>
+          <option value="expired" {% if filters.period == 'expired' %}selected{% endif %}>Vencidos</option>
+          <option value="7" {% if filters.period == '7' %}selected{% endif %}>Até 7 dias</option>
+          <option value="30" {% if filters.period == '30' %}selected{% endif %}>Até 30 dias</option>
+          <option value="60" {% if filters.period == '60' %}selected{% endif %}>Até 60 dias</option>
+          <option value="90" {% if filters.period == '90' %}selected{% endif %}>Até 90 dias</option>
+        </select>
+      </div>
+    </div>
+    <div class="cert-monitor-actions">
+      <a class="btn btn-secondary" href="/certificates/monitoring#certificados">Limpar</a>
+      <button type="submit">Filtrar</button>
+    </div>
+  </form>
+
+  <section class="card cert-monitor-table-card" aria-labelledby="certificate-monitoring-title">
+    <div class="cert-monitor-section-heading">
+      <div>
+        <p class="section-kicker">Inventário</p>
+        <h2 id="certificate-monitoring-title">Certificados monitorados</h2>
+        <p>Situação calculada automaticamente a partir da data de vencimento.</p>
+      </div>
+      <span class="cert-monitor-count">{{ pagination.total }} resultado(s)</span>
+    </div>
+
+    <div class="table-wrap cert-monitor-table-wrap">
+      <table class="cert-monitor-table">
+        <thead>
+          <tr>
+            <th>Certificado</th>
+            <th>Validade e status</th>
+            <th>Grupo</th>
+            <th>Origem</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            {% set c = row.cert %}
+            <tr class="cert-monitor-row cert-monitor-row-{{ row.expiration.severity }}">
+              <td data-label="Certificado">
+                <div class="certificate-identity">
+                  <span class="certificate-icon" aria-hidden="true">ID</span>
+                  <div>
+                    <strong title="{{ c.common_name or '-' }}">{{ c.common_name or '-' }}</strong>
+                    <small title="{{ c.issuer or '-' }}">Emissor: {{ c.issuer or '-' }}</small>
+                    <small title="{{ c.serial or '-' }}">Serial: {{ c.serial or '-' }}</small>
+                    <small title="{{ c.fingerprint or '-' }}">Fingerprint: {{ c.fingerprint or '-' }}</small>
+                  </div>
+                </div>
+              </td>
+              <td data-label="Validade e status">
+                <div class="certificate-validity cert-monitor-validity-stack">
+                  <span>{{ c.not_after.strftime('%d/%m/%Y') if c.not_after and c.not_after.strftime is defined else '-' }}</span>
+                  <small>Inicio: {{ c.not_before.strftime('%d/%m/%Y') if c.not_before and c.not_before.strftime is defined else '-' }}</small>
+                  <span class="badge badge-{{ row.expiration.severity if row.expiration.severity != 'muted' else 'info' }}">{{ row.expiration.label }}</span>
+                  <small>
+                    {% if row.days_remaining is none %}
+                      Dias: -
+                    {% elif row.days_remaining < 0 %}
+                      {{ 0 - row.days_remaining }} dia(s) vencido(s)
+                    {% else %}
+                      {{ row.days_remaining }} dia(s) restante(s)
+                    {% endif %}
+                  </small>
+                </div>
+              </td>
+              <td data-label="Grupo">{{ row.group.name if row.group else 'Sem grupo' }}</td>
+              <td data-label="Origem">
+                <span>{{ c.source or 'issued' }}</span>
+                <small class="certificate-muted">{{ c.source_format or c.algorithm or '-' }}</small>
+              </td>
+              <td data-label="Ações">
+                <details class="cert-monitor-row-actions">
+                  <summary>Gerenciar</summary>
+                  <form class="cert-monitor-assignment" method="post" action="/certificates/{{ c.id }}/group">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label>
+                      Grupo
+                      <select name="group_id" aria-label="Grupo do certificado">
+                        <option value="">Sem grupo</option>
+                        {% for group in groups %}
+                          <option value="{{ group.id }}" {% if c.group_id == group.id %}selected{% endif %}>{{ group.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </label>
+                    <label>
+                      Novo grupo
+                      <input name="new_group_name" placeholder="Nome do grupo">
+                    </label>
+                    <button class="btn-sm" type="submit">Atualizar grupo</button>
+                  </form>
+                </details>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5">
+                <div class="cert-monitor-empty">Nenhum certificado encontrado para os filtros selecionados.</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cert-monitor-pagination" aria-label="Paginação de certificados">
+      <span>Página {{ pagination.page }} de {{ pagination.total_pages }}</span>
+      <div>
+        {% if pagination.has_prev %}
+          <a class="btn btn-secondary" href="{{ url_for('certs.monitoring', q=filters.q, group_id=filters.group_id, status=filters.status, period=filters.period, page=pagination.prev_page) }}#certificados">Anterior</a>
+        {% else %}
+          <span class="btn btn-secondary disabled" aria-disabled="true">Anterior</span>
+        {% endif %}
+        {% if pagination.has_next %}
+          <a class="btn btn-secondary" href="{{ url_for('certs.monitoring', q=filters.q, group_id=filters.group_id, status=filters.status, period=filters.period, page=pagination.next_page) }}#certificados">Próxima</a>
+        {% else %}
+          <span class="btn btn-secondary disabled" aria-disabled="true">Próxima</span>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</section>
+
+<section id="grupos" class="card cert-monitor-groups cert-monitor-panel" aria-labelledby="certificate-groups-title">
+  <div class="cert-monitor-section-heading">
+    <div>
+      <p class="section-kicker">Grupos</p>
+      <h2 id="certificate-groups-title">Grupos de certificados</h2>
+      <p>Crie grupos por sistema, área, ambiente ou criticidade operacional.</p>
+    </div>
+  </div>
+
+  <form class="cert-monitor-group-create" method="post" action="/certificates/groups/create">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="name" placeholder="Novo grupo" required>
+    <input name="description" placeholder="Descrição opcional">
+    <button type="submit">Criar</button>
+  </form>
+
+  <div class="cert-monitor-group-list">
+    {% for group in groups %}
+      <div class="cert-monitor-group-item">
+        <form class="cert-monitor-group-row" method="post" action="/certificates/groups/{{ group.id }}/update">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input name="name" value="{{ group.name }}" required>
+          <input name="description" value="{{ group.description or '' }}" placeholder="Descrição opcional">
+          <span>{{ group_counts.get(group.id, 0) }} certificado(s)</span>
+          <button class="btn-sm" type="submit">Salvar</button>
+        </form>
+        <form class="cert-monitor-group-delete" method="post" action="/certificates/groups/{{ group.id }}/delete">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-sm btn-danger" type="submit" onclick="return confirm('Excluir este grupo? Os certificados associados ficarão sem grupo.')">Excluir</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="cert-monitor-empty">Nenhum grupo criado.</div>
+    {% endfor %}
+  </div>
+  {% if ungrouped_count %}
+    <div class="cert-monitor-empty">{{ ungrouped_count }} certificado(s) sem grupo.</div>
+  {% endif %}
+</section>
+
+<section id="importacao" class="card cert-monitor-tool cert-monitor-panel" aria-labelledby="certificate-import-title">
+  <div class="cert-monitor-tool-heading">
+    <p class="section-kicker">Importação</p>
+    <h2 id="certificate-import-title">Novo certificado</h2>
+    <p>Formatos aceitos: {{ accepted_formats }}. Senhas de PFX/P12 não são armazenadas.</p>
+  </div>
+  <form method="post" action="/certificates/import" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="cert-monitor-form-grid">
+      <div class="full">
+        <label for="certificate-file">Arquivo</label>
+        <input id="certificate-file" name="certificate_file" type="file" accept=".crt,.cer,.pem,.der,.pfx,.p12" required>
+      </div>
+      <div>
+        <label for="import-pfx-password">Senha PFX/P12</label>
+        <input id="import-pfx-password" name="pfx_password" type="password" autocomplete="new-password" placeholder="Somente se protegido">
+      </div>
+      <div>
+        <label for="import-group">Grupo existente</label>
+        <select id="import-group" name="group_id">
+          <option value="">Sem grupo</option>
+          {% for group in groups %}
+            <option value="{{ group.id }}">{{ group.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="import-new-group">Criar grupo</label>
+        <input id="import-new-group" name="new_group_name" placeholder="Nome do novo grupo">
+      </div>
+      <div>
+        <label for="import-new-group-description">Descrição do grupo</label>
+        <input id="import-new-group-description" name="new_group_description" placeholder="Opcional">
+      </div>
+    </div>
+    <div class="cert-monitor-actions">
+      <button type="submit">Importar certificado</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

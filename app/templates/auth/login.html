@@ -1,0 +1,121 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Login | Certificadora Web{% endblock %}
+
+{% block shell %}
+<div class="login-page login-page-enhanced">
+  <div class="login-card login-card-enhanced">
+
+    <div class="login-panel-main">
+      <div class="login-brand login-brand-enhanced">
+        <img
+          src="{{ url_for('assets', filename='logo.png') }}"
+          alt="Logo Example Organization"
+          onerror="this.style.display='none'"
+        >
+
+        <div>
+          <p class="login-kicker">Acesso seguro</p>
+          <h1>Certificadora Web</h1>
+          <p>Entre com seu usuário do Active Directory para acessar o sistema.</p>
+        </div>
+      </div>
+
+      <div class="login-theme-row">
+        <span>Preferência visual</span>
+
+        <details class="theme-menu">
+          <summary>
+            <span data-theme-current>▣ Sistema</span>
+          </summary>
+
+          <div class="theme-menu-popover">
+            <button type="button" class="theme-option" data-theme-option="light">
+              ☀ Claro
+            </button>
+
+            <button type="button" class="theme-option" data-theme-option="dark">
+              ◐ Escuro
+            </button>
+
+            <button type="button" class="theme-option" data-theme-option="system">
+              ▣ Sistema
+            </button>
+          </div>
+        </details>
+      </div>
+
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="login-alert-stack">
+        {% for message in messages %}
+        <div class="alert alert-warning">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <form method="post" class="login-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="login-field">
+          <label for="username">Usuário</label>
+          <input
+            id="username"
+            name="username"
+            placeholder="ex: admin.filipe"
+            autocomplete="username"
+            autofocus
+            required
+          >
+        </div>
+
+        <div class="login-field">
+          <label for="password">Senha</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Senha do Active Directory"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <button type="submit" class="login-submit">
+          Entrar no sistema
+        </button>
+      </form>
+
+      <p class="login-footnote">
+        O acesso é restrito a usuários autorizados. Todas as tentativas de autenticação
+        podem ser registradas para fins de auditoria e segurança.
+      </p>
+    </div>
+
+    <aside class="login-panel-side">
+      <div class="login-security-card">
+        <div class="login-security-icon">🔐</div>
+
+        <h2>Ambiente protegido</h2>
+
+        <p>
+          Este sistema é destinado à gestão de solicitações, emissão, download e
+          revogação de certificados digitais internos.
+        </p>
+
+        <ul>
+          <li>Autenticação via Active Directory</li>
+          <li>Validação por MFA</li>
+          <li>Permissões internas por grupo</li>
+          <li>Registro de eventos em auditoria</li>
+        </ul>
+      </div>
+    </aside>
+
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,119 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Validar MFA | Certificadora Web{% endblock %}
+
+{% block shell %}
+<div class="login-page mfa-verify-page">
+  <div class="login-card mfa-verify-card">
+
+    <section class="mfa-verify-main">
+      <div class="login-brand mfa-verify-brand">
+        <img
+          src="/assets/logo.png"
+          alt="Logo Example Organization"
+          onerror="this.style.display='none'"
+        >
+
+        <div>
+          <p class="mfa-verify-kicker">Confirmação de identidade</p>
+          <h1>Validação MFA</h1>
+          <p>
+            Informe o código gerado pelo seu aplicativo autenticador para concluir o acesso.
+          </p>
+        </div>
+      </div>
+
+      <div class="mfa-verify-notice">
+        <div class="mfa-verify-notice-icon" aria-hidden="true">🔐</div>
+        <div>
+          <strong>Validação obrigatória</strong>
+          <p>
+            Esta etapa protege o acesso ao sistema e confirma que a tentativa de login
+            está sendo realizada por um usuário autorizado.
+          </p>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="login-alert-stack">
+        {% for message in messages %}
+        <div class="alert alert-warning">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <form method="post" class="mfa-verify-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mfa-verify-field">
+          <label for="code">Código MFA</label>
+          <input
+            id="code"
+            name="code"
+            placeholder="000000"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            autofocus
+            required
+          >
+          <small>
+            Digite o código de 6 dígitos exibido no Microsoft Authenticator.
+          </small>
+        </div>
+
+        <button type="submit" class="mfa-verify-submit">
+          Validar acesso
+        </button>
+      </form>
+
+      <p class="mfa-verify-footnote">
+        Se o código não for aceito, aguarde a geração de um novo código no aplicativo
+        autenticador e tente novamente.
+      </p>
+    </section>
+
+    <aside class="mfa-verify-side">
+      <div class="mfa-verify-security-card">
+        <div class="mfa-verify-security-icon">🛡</div>
+
+        <h2>Acesso protegido</h2>
+
+        <p>
+          A Certificadora utiliza autenticação multifator para proteger operações sensíveis,
+          como solicitações, aprovações, downloads e revogações de certificados.
+        </p>
+
+        <div class="mfa-verify-checklist">
+          <div>
+            <span>✓</span>
+            <strong>Senha validada</strong>
+          </div>
+
+          <div>
+            <span>✓</span>
+            <strong>Identidade confirmada por MFA</strong>
+          </div>
+
+          <div>
+            <span>✓</span>
+            <strong>Acesso registrado em auditoria</strong>
+          </div>
+        </div>
+
+        <p class="mfa-verify-side-note">
+          Nunca compartilhe códigos de autenticação. O código MFA é pessoal, temporário
+          e deve ser utilizado somente durante o seu login.
+        </p>
+      </div>
+    </aside>
+
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="requests-header">
+    <div>
+      <p class="page-kicker">Fluxo de aprovação</p>
+      <h1>Solicitações</h1>
+      <p>Revise pedidos de certificados, consulte dados técnicos e registre decisões com rastreabilidade.</p>
+    </div>
+    <div class="requests-header-badges" aria-label="Resumo da área">
+      <span>📋 Revisão</span>
+      <span>✓ Aprovação</span>
+      <span>⊘ Recusa</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<section class="certificate-request-review-page requests-review-page">
+  <div class="certificate-request-review-notice requests-review-notice">
+    <div class="requests-review-main">
+      <div class="requests-review-icon" aria-hidden="true">📋</div>
+      <div>
+        <p class="section-kicker">Fila operacional</p>
+        <strong>Revisão de solicitações</strong>
+        <span>Analise as informações antes de aprovar ou recusar uma emissão.</span>
+      </div>
+    </div>
+    <a class="btn btn-secondary" href="/certificates/request/new">📝 Nova solicitação</a>
+    <a class="btn btn-secondary" href="/certificates/request/external-csr">Assinar CSR externa</a>
+  </div>
+
+  <div class="certificate-request-list requests-list">
+    {% for r in rows %}
+      <article class="certificate-request-card requests-card {% if r.status == 'approved' %}request-approved{% elif r.status == 'rejected' %}request-rejected{% else %}request-pending{% endif %}" aria-labelledby="request-title-{{ r.id }}">
+        <header class="certificate-request-card-header requests-card-header">
+          <div class="certificate-request-id-block requests-id-block">
+            <span class="certificate-request-id">#{{ r.id }}</span>
+            {% if r.status == 'approved' %}
+              <span class="badge badge-success">Aprovada</span>
+            {% elif r.status == 'rejected' %}
+              <span class="badge badge-danger">Recusada</span>
+            {% else %}
+              <span class="badge badge-warning">Pendente</span>
+            {% endif %}
+          </div>
+
+          <div class="certificate-request-title requests-title">
+            <strong id="request-title-{{ r.id }}">{{ r.common_name or '-' }}</strong>
+            <span>{{ r.cert_type or '-' }} · {{ r.environment or 'Sem ambiente' }}</span>
+          </div>
+
+          <div class="certificate-request-user requests-user-box">
+            <label>Solicitante</label>
+
+            <span>
+              {% if r.requester %}
+                {{ r.requester.display_name or r.requester.username }}
+              {% else %}
+                Usuário #{{ r.requester_id or '-' }}
+              {% endif %}
+            </span>
+
+            <small>
+              {% if r.requester %}
+                {{ r.requester.username }} ·
+              {% endif %}
+
+              {% if r.created_at %}
+                {{ r.created_at.strftime('%d/%m/%Y %H:%M:%S') }}
+              {% else %}
+                -
+              {% endif %}
+            </small>
+          </div>
+        </header>
+
+        <details class="certificate-request-details requests-details">
+          <summary>
+            <span>Ver solicitação completa</span>
+            <small>Dados técnicos, SAN, CSR e justificativa</small>
+          </summary>
+
+          <div class="certificate-request-details-content requests-details-content">
+            <section>
+              <h3>Identificação</h3>
+              <div class="certificate-request-detail-grid requests-detail-grid">
+                <div><label>Nome comum (CN)</label><p>{{ r.common_name or '-' }}</p></div>
+                <div><label>Tipo</label><p>{{ r.cert_type or '-' }}</p></div>
+                <div><label>Situação</label><p>{{ r.status or '-' }}</p></div>
+                <div><label>Sistema</label><p>{{ r.system_name or '-' }}</p></div>
+                <div><label>Ambiente</label><p>{{ r.environment or '-' }}</p></div>
+                <div><label>Área</label><p>{{ r.area or '-' }}</p></div>
+                <div><label>Dono técnico</label><p>{{ r.technical_owner or '-' }}</p></div>
+                <div><label>E-mail</label><p>{{ r.email or '-' }}</p></div>
+              </div>
+            </section>
+
+            <section>
+              <h3>Solicitante e decisão</h3>
+              <div class="certificate-request-detail-grid requests-detail-grid">
+                <div>
+                  <label>Solicitante</label>
+                  <p>
+                    {% if r.requester %}
+                      {{ r.requester.display_name or r.requester.username }}
+                      <br>
+                      <small>{{ r.requester.username }}</small>
+                    {% else %}
+                      Usuário #{{ r.requester_id or '-' }}
+                    {% endif %}
+                  </p>
+                </div>
+
+                <div>
+                  <label>Data da solicitação</label>
+                  <p>
+                    {% if r.created_at %}
+                      {{ r.created_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </p>
+                </div>
+
+                <div>
+                  <label>Última atualização</label>
+                  <p>
+                    {% if r.updated_at %}
+                      {{ r.updated_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </p>
+                </div>
+
+                <div>
+                  <label>Decidido por</label>
+                  <p>
+                    {% if r.approver %}
+                      {{ r.approver.display_name or r.approver.username }}
+                      <br>
+                      <small>{{ r.approver.username }}</small>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </p>
+                </div>
+
+                <div>
+                  <label>Data da decisão</label>
+                  <p>
+                    {% if r.decided_at %}
+                      {{ r.decided_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3>Dados do certificado</h3>
+              <div class="certificate-request-detail-grid requests-detail-grid">
+                <div><label>Organização</label><p>{{ r.organization or '-' }}</p></div>
+                <div><label>Unidade organizacional</label><p>{{ r.org_unit or '-' }}</p></div>
+                <div><label>País</label><p>{{ r.country or '-' }}</p></div>
+                <div><label>Estado</label><p>{{ r.state or '-' }}</p></div>
+                <div><label>Localidade</label><p>{{ r.locality or '-' }}</p></div>
+                <div><label>Validade</label><p>{{ r.validity_days or '-' }} dias</p></div>
+                <div><label>Algoritmo</label><p>{{ r.key_algorithm or '-' }}</p></div>
+                <div><label>Tamanho RSA</label><p>{{ r.rsa_key_size or '-' }}</p></div>
+                <div><label>Curva ECDSA</label><p>{{ r.ecdsa_curve or '-' }}</p></div>
+              </div>
+            </section>
+
+            <section>
+              <h3>Uso, SAN e CSR</h3>
+              <div class="certificate-request-detail-grid wide requests-detail-grid requests-detail-wide">
+                <div><label>Uso da chave (Key Usage)</label><p>{{ r.key_usage or '-' }}</p></div>
+                <div><label>Uso estendido da chave (Extended Key Usage)</label><p>{{ r.extended_key_usage or '-' }}</p></div>
+                <div><label>SAN</label><p><code>{{ r.san_json or '-' }}</code></p></div>
+                <div>
+                  <label>CSR informado</label>
+                  <p>
+                    {% if r.csr_pem %}
+                      <code>{{ r.csr_pem }}</code>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </p>
+                </div>
+                <div>
+                  <label>Gerado pelo sistema</label>
+                  <p>{% if r.generated_by_system %}Sim{% else %}Não{% endif %}</p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3>Justificativa e observações</h3>
+              <div class="certificate-request-detail-grid wide requests-detail-grid requests-detail-wide">
+                <div><label>Justificativa</label><p>{{ r.justification or '-' }}</p></div>
+                <div><label>Observações</label><p>{{ r.notes or '-' }}</p></div>
+
+                {% if r.approval_comment %}
+                  <div><label>Comentário da aprovação</label><p>{{ r.approval_comment }}</p></div>
+                {% endif %}
+
+                {% if r.rejection_reason %}
+                  <div><label>Motivo da recusa</label><p>{{ r.rejection_reason }}</p></div>
+                {% endif %}
+              </div>
+            </section>
+          </div>
+        </details>
+
+        <footer class="certificate-request-actions requests-actions">
+          {% if r.status == 'pending' %}
+            <form method="post" action="/certificates/requests/{{ r.id }}/approve" class="certificate-request-action-form approve-form requests-decision-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label class="sr-only" for="approve-comment-{{ r.id }}">Comentário da aprovação</label>
+              <input id="approve-comment-{{ r.id }}" name="comment" placeholder="Comentário da aprovação">
+              <button class="btn-sm" type="submit">Aprovar</button>
+            </form>
+
+            <form method="post" action="/certificates/requests/{{ r.id }}/reject" class="certificate-request-action-form reject-form requests-decision-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label class="sr-only" for="reject-reason-{{ r.id }}">Motivo da recusa</label>
+              <input id="reject-reason-{{ r.id }}" name="reason" placeholder="Motivo da recusa" required>
+              <button class="btn-sm btn-danger" type="submit">Recusar</button>
+            </form>
+          {% else %}
+            <span class="certificate-request-muted requests-decided-note">Solicitação já decidida.</span>
+          {% endif %}
+        </footer>
+      </article>
+    {% else %}
+      <div class="certificate-request-empty requests-empty-state">
+        <div class="requests-empty-icon">☷</div>
+        <strong>Nenhuma solicitação encontrada</strong>
+        <p>Não há pedidos pendentes ou registrados para revisão no momento.</p>
+        <a class="btn" href="/certificates/request/new">Criar nova solicitação</a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

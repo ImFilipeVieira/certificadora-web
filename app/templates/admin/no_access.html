@@ -1,0 +1,99 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Acesso não provisionado | Certificadora Web{% endblock %}
+
+{% block page_header %}
+  <div class="access-provision-header">
+    <div>
+      <p class="page-kicker">Controle de acesso</p>
+      <h1>Acesso não provisionado</h1>
+      <p>Autenticação realizada, mas ainda falta vínculo interno de permissões para utilizar a aplicação.</p>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<div class="access-denied-page access-provision-page">
+  <section class="access-denied-card access-provision-card" aria-labelledby="access-provision-title">
+    <div class="access-provision-visual" aria-hidden="true">
+      <div class="access-denied-icon access-provision-icon">🔒</div>
+      <div class="access-provision-status">
+        <span></span>
+        Aguardando provisionamento
+      </div>
+    </div>
+
+    <div class="access-denied-content access-provision-content">
+      <p class="access-denied-kicker">Controle de acesso</p>
+
+      <h1 id="access-provision-title">Acesso ainda não liberado</h1>
+
+      <p class="access-denied-message">
+        Seu usuário foi autenticado com sucesso, porém ainda não possui grupos ou permissões internas
+        atribuídas para acessar os recursos desta aplicação.
+      </p>
+
+      <div class="access-provision-summary" aria-label="Resumo da situação">
+        <div>
+          <strong>✓ Autenticação</strong>
+          <span>Concluída com sucesso</span>
+        </div>
+        <div>
+          <strong>⏳ Permissões</strong>
+          <span>Pendentes de atribuição</span>
+        </div>
+        <div>
+          <strong>👤 Aprovação</strong>
+          <span>Sujeita ao gestor</span>
+        </div>
+      </div>
+
+      <div class="access-denied-info access-provision-info">
+        <strong>O que fazer?</strong>
+        <p>
+          Caso o acesso seja necessário para uma demonstração, solicite a inclusão
+          do usuário em um grupo de permissões local.
+        </p>
+        <p>
+          A liberação deve seguir o fluxo administrativo definido para o ambiente.
+        </p>
+      </div>
+
+      <div class="access-provision-steps" aria-label="Etapas para liberação">
+        <div>
+          <span>1</span>
+          <p>Solicitar acesso</p>
+        </div>
+        <div>
+          <span>2</span>
+          <p>Aguardar validação do gestor</p>
+        </div>
+        <div>
+          <span>3</span>
+          <p>Retornar à aplicação após liberação</p>
+        </div>
+      </div>
+
+      <div class="access-denied-actions access-provision-actions">
+        <a
+          class="btn"
+          href="https://example.com/access-request"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Solicitar acesso
+        </a>
+
+        <a class="btn btn-secondary" href="{{ url_for('auth.logout') }}">
+          ⇥ Sair com segurança
+        </a>
+      </div>
+
+      <p class="access-denied-footnote access-provision-footnote">
+        Se você acredita que já deveria ter acesso, confirme com seu gestor se o grupo de permissões foi atribuído corretamente.
+      </p>
+    </div>
+  </section>
+</div>
+{% endblock %}
+

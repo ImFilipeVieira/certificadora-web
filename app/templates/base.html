@@ -1,0 +1,112 @@
+﻿<!doctype html>
+<html lang="pt-br" data-theme="light">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#0f766e">
+  <title>{% block title %}Certificadora Example Organization{% endblock %}</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/assets/logo.png">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dist/certificadora.bundle.css') }}">
+</head>
+
+<body>
+{% block shell %}
+  <a class="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Menu principal">
+      <div class="brand">
+        <img class="brand-logo" src="/assets/logo.png" alt="Example Organization" onerror="this.style.display='none'">
+        <div>
+          <div class="brand-title">Certificadora<br>Example Organization</div>
+          <div class="brand-subtitle">CA Interna</div>
+        </div>
+      </div>
+
+      <div class="nav-section-title">Operação</div>
+      <nav class="nav-list" aria-label="Operação">
+        <a class="nav-link {{ 'active' if request.path == '/' else '' }}" href="/" {% if request.path == '/' %}aria-current="page"{% endif %}><span class="nav-icon">🏠</span><span>Início</span></a>
+        <a class="nav-link {{ 'active' if request.path.startswith('/certificates/request/new') else '' }}" href="/certificates/request/new" {% if request.path.startswith('/certificates/request/new') %}aria-current="page"{% endif %}><span class="nav-icon">📝</span><span>Nova solicitação</span></a>
+        <a class="nav-link {{ 'active' if request.path.startswith('/certificates/requests') else '' }}" href="/certificates/requests" {% if request.path.startswith('/certificates/requests') %}aria-current="page"{% endif %}><span class="nav-icon">📋</span><span>Solicitações</span></a>
+        <a class="nav-link {{ 'active' if request.path.startswith('/certificates/issued') else '' }}" href="/certificates/issued" {% if request.path.startswith('/certificates/issued') %}aria-current="page"{% endif %}><span class="nav-icon">🔐</span><span>Certificados</span></a>
+        <a class="nav-link {{ 'active' if request.path.startswith('/certificates/monitoring') else '' }}" href="/certificates/monitoring" {% if request.path.startswith('/certificates/monitoring') %}aria-current="page"{% endif %}><span class="nav-icon">📈</span><span>Monitoramento</span></a>
+      </nav>
+
+      <div class="nav-section-title">Governança</div>
+      <nav class="nav-list" aria-label="Governança">
+        <a class="nav-link {{ 'active' if request.path.startswith('/users/') and not request.path.startswith('/users/groups') else '' }}" href="/users/"><span class="nav-icon">👤</span><span>Usuários</span></a>
+        <a class="nav-link {{ 'active' if request.path.startswith('/users/groups') else '' }}" href="/users/groups"><span class="nav-icon">🧩</span><span>Grupo de permissões</span></a>
+        <a class="nav-link {{ 'active' if request.path.startswith('/audit') else '' }}" href="/audit"><span class="nav-icon">📊</span><span>Auditoria</span></a>
+        <a class="nav-link {{ 'active' if request.path.startswith('/documentation') else '' }}" href="/documentation/"><span class="nav-icon">📚</span><span>Documentação</span></a>
+      </nav>
+
+      <div class="nav-section-title">Sessão</div>
+      <nav class="nav-list" aria-label="Sessão">
+        <a class="nav-link" href="/logout"><span class="nav-icon">⇥</span><span>Sair</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <strong>v{{ config.APP_VERSION }}</strong>
+      </div>
+    </aside>
+
+    <main id="conteudo-principal" class="main" tabindex="-1">
+      <header class="topbar">
+        <div class="page-title">
+          {% block page_header %}
+            <h1>Certificadora Web</h1>
+            <p>Gestão local, segura e rastreável de certificados digitais internos.</p>
+          {% endblock %}
+        </div>
+
+        <div class="topbar-actions">
+          <button class="mobile-sidebar-toggle btn-secondary" type="button" aria-label="Abrir menu" onclick="document.body.classList.toggle('sidebar-open')">☰ Menu</button>
+
+          <details class="theme-menu">
+            <summary><span data-theme-current>▣ Sistema</span></summary>
+            <div class="theme-menu-popover" role="menu">
+              <button type="button" class="theme-option" data-theme-option="light" role="menuitem">☀ Claro</button>
+              <button type="button" class="theme-option" data-theme-option="dark" role="menuitem">◐ Escuro</button>
+              <button type="button" class="theme-option" data-theme-option="system" role="menuitem">▣ Sistema</button>
+            </div>
+          </details>
+
+          <div class="user-pill" title="Usuário autenticado">👤 {{ current_user.username if current_user.is_authenticated else 'Visitante' }}</div>
+        </div>
+      </header>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-info" role="status">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block body %}{% endblock %}
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/plotly-theme.js') }}"></script>
+  <script>
+    document.addEventListener('click', function (event) {
+      if (document.body.classList.contains('sidebar-open') && !event.target.closest('.sidebar') && !event.target.closest('.mobile-sidebar-toggle')) {
+        document.body.classList.remove('sidebar-open');
+      }
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') document.body.classList.remove('sidebar-open');
+    });
+  </script>
+{% endblock %}
+</body>
+
+</html>
+

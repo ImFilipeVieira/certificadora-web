@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block page_header %}
+  <div class="home-header">
+    <div>
+      <p class="page-kicker">Painel operacional</p>
+      <h1>Início</h1>
+      <p>Visão executiva da certificadora interna, com indicadores, vencimentos e auditoria recente.</p>
+    </div>
+    <div class="home-header-badges" aria-label="Resumo do ambiente">
+      <span>🔐 CA Interna</span>
+      <span>📈 Monitoramento</span>
+      <span>🛡️ Governança</span>
+    </div>
+  </div>
+{% endblock %}
+
+{% block body %}
+<section class="home-quick-actions card panel-card" aria-labelledby="quick-actions-title">
+  <div class="panel-heading">
+    <div>
+      <p class="section-kicker">Atalhos</p>
+      <h2 id="quick-actions-title">Ações rápidas</h2>
+      <p>Execute as tarefas mais usadas da operação em poucos cliques.</p>
+    </div>
+  </div>
+
+  <div class="quick-action-grid">
+    <a class="quick-action" href="/certificates/request/new">
+      <span class="quick-action-icon">📝</span>
+      <span>
+        <strong>Nova solicitação</strong>
+        <small>Iniciar pedido de certificado</small>
+      </span>
+    </a>
+
+    <a class="quick-action" href="/certificates/requests">
+      <span class="quick-action-icon">📋</span>
+      <span>
+        <strong>Ver solicitações</strong>
+        <small>Acompanhar análise e decisão</small>
+      </span>
+    </a>
+
+    <a class="quick-action" href="/certificates/issued">
+      <span class="quick-action-icon">🔐</span>
+      <span>
+        <strong>Certificados emitidos</strong>
+        <small>Consultar, baixar e auditar</small>
+      </span>
+    </a>
+
+    <a class="quick-action" href="/certificates/request/external-csr">
+      <span class="quick-action-icon">CSR</span>
+      <span>
+        <strong>Assinar CSR externa</strong>
+        <small>Equipamentos e sistemas externos</small>
+      </span>
+    </a>
+
+    <a class="quick-action" href="/audit">
+      <span class="quick-action-icon">📊</span>
+      <span>
+        <strong>Auditoria</strong>
+        <small>Eventos e rastreabilidade</small>
+      </span>
+    </a>
+  </div>
+</section>
+
+<section class="grid grid-3 dashboard-kpis home-kpis" aria-label="Indicadores principais">
+  <article class="stat-card kpi-card kpi-issued">
+    <div class="kpi-topline">
+      <span class="kpi-icon">🔐</span>
+      <span class="stat-label">Certificados emitidos</span>
+    </div>
+    <div class="stat-value">{{ dashboard.cards.issued }}</div>
+    <p class="card-description">Total ativo/registrado como emitido.</p>
+  </article>
+
+  <article class="stat-card kpi-card kpi-expiring">
+    <div class="kpi-topline">
+      <span class="kpi-icon">⏳</span>
+      <span class="stat-label">Perto do vencimento</span>
+    </div>
+    <div class="stat-value kpi-warning">{{ dashboard.cards.expiring_30 }}</div>
+    <p class="card-description">Vencem nos próximos 30 dias.</p>
+  </article>
+
+  <article class="stat-card kpi-card kpi-downloads">
+    <div class="kpi-topline">
+      <span class="kpi-icon">⇩</span>
+      <span class="stat-label">Downloads 30 dias</span>
+    </div>
+    <div class="stat-value">{{ dashboard.cards.downloads_30 }}</div>
+    <p class="card-description">Downloads concluídos recentemente.</p>
+  </article>
+
+  <article class="stat-card kpi-card kpi-pending">
+    <div class="kpi-topline">
+      <span class="kpi-icon">◷</span>
+      <span class="stat-label">Pendentes</span>
+    </div>
+    <div class="stat-value kpi-info">{{ dashboard.cards.pending }}</div>
+    <p class="card-description">Solicitações aguardando decisão.</p>
+  </article>
+
+  <article class="stat-card kpi-card kpi-revoked">
+    <div class="kpi-topline">
+      <span class="kpi-icon">⊘</span>
+      <span class="stat-label">Revogados</span>
+    </div>
+    <div class="stat-value kpi-danger">{{ dashboard.cards.revoked|default(0) }}</div>
+    <p class="card-description">Certificados com situação revogada.</p>
+  </article>
+
+  <article class="stat-card kpi-card kpi-health">
+    <div class="kpi-topline">
+      <span class="kpi-icon">✓</span>
+      <span class="stat-label">Saúde operacional</span>
+    </div>
+    <div class="stat-value">{{ dashboard.cards.health_score|default('OK') }}</div>
+    <p class="card-description">Resumo visual da operação atual.</p>
+  </article>
+</section>
+
+<div class="dashboard-grid home-dashboard-grid">
+  <section class="card panel panel-8 panel-card chart-panel featured-chart" aria-labelledby="issued-chart-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Tendência</p>
+        <h2 id="issued-chart-title">Certificados emitidos</h2>
+        <p>Evolução mensal da emissão.</p>
+      </div>
+    </div>
+    <div class="chart-shell">{{ dashboard.charts.issued_month|safe }}</div>
+  </section>
+
+  <section class="card panel panel-4 panel-card chart-panel-sm" aria-labelledby="status-chart-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Situação</p>
+        <h2 id="status-chart-title">Situação das solicitações</h2>
+        <p>Distribuição por situação.</p>
+      </div>
+    </div>
+    <div class="chart-shell">{{ dashboard.charts.request_status|safe }}</div>
+  </section>
+
+  <section class="card panel panel-6 panel-card chart-panel-sm" aria-labelledby="downloads-chart-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Uso</p>
+        <h2 id="downloads-chart-title">Downloads</h2>
+        <p>Formatos mais baixados nos últimos 90 dias.</p>
+      </div>
+    </div>
+    <div class="chart-shell">{{ dashboard.charts.downloads_format|safe }}</div>
+  </section>
+
+  <section class="card panel panel-6 panel-card chart-panel-sm" aria-labelledby="expiry-chart-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Risco</p>
+        <h2 id="expiry-chart-title">Vencimentos</h2>
+        <p>Certificados vencendo em até 90 dias.</p>
+      </div>
+    </div>
+    <div class="chart-shell">{{ dashboard.charts.expiry|safe }}</div>
+  </section>
+
+  <section class="card panel panel-5 panel-card insights-panel" aria-labelledby="insights-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Priorização</p>
+        <h2 id="insights-title">Insights</h2>
+        <p>Sinais automáticos para priorização operacional.</p>
+      </div>
+    </div>
+
+    <div class="insight-list">
+      {% for i in dashboard.insights %}
+        <article class="insight insight-{{ i.level }}">
+          <strong>{{ i.title }}</strong>
+          <p>{{ i.text }}</p>
+        </article>
+      {% else %}
+        <article class="insight insight-success">
+          <strong>Nenhum alerta crítico</strong>
+          <p>Não há sinais automáticos relevantes para priorização neste momento.</p>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card panel panel-7 panel-card panel-table-fill" aria-labelledby="expiring-table-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Agenda</p>
+        <h2 id="expiring-table-title">Próximos vencimentos</h2>
+        <p>Top 10 certificados que vencem em até 90 dias.</p>
+      </div>
+    </div>
+
+    <div class="table-wrap compact-table pro-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>CN</th>
+            <th>Dias</th>
+            <th>Vencimento</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in dashboard.expiring_list %}
+            <tr>
+              <td><strong>{{ c.common_name }}</strong></td>
+              <td>
+                {% if c.days_left <= 7 %}
+                  <span class="badge badge-danger">{{ c.days_left }} dias</span>
+                {% elif c.days_left <= 30 %}
+                  <span class="badge badge-warning">{{ c.days_left }} dias</span>
+                {% else %}
+                  <span class="badge badge-info">{{ c.days_left }} dias</span>
+                {% endif %}
+              </td>
+              <td>{{ c.not_after }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="3">
+                <div class="table-empty-state">✓ Nenhum certificado vencendo nos próximos 90 dias.</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card panel panel-12 panel-card audit-panel" aria-labelledby="recent-events-title">
+    <div class="panel-heading">
+      <div>
+        <p class="section-kicker">Rastreabilidade</p>
+        <h2 id="recent-events-title">Últimos eventos auditados</h2>
+        <p>Visão rápida dos eventos mais recentes do sistema.</p>
+      </div>
+      <a class="btn btn-secondary" href="/audit">Ver auditoria completa</a>
+    </div>
+
+    <div class="table-wrap compact-table pro-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data UTC</th>
+            <th>Evento</th>
+            <th>Severidade</th>
+            <th>Resultado</th>
+            <th>Usuário</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in dashboard.recent_events %}
+            <tr>
+              <td>{{ e.timestamp_utc|br_time }}</td>
+              <td><span class="badge badge-info">{{ e.event_type }}</span></td>
+              <td>{{ e.severity }}</td>
+              <td>{{ e.result }}</td>
+              <td>{{ e.actor_username }}</td>
+              <td>{{ e.ip_address }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6">
+                <div class="table-empty-state">Nenhum evento auditado encontrado.</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
