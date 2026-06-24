@@ -8,6 +8,11 @@ O formato segue uma estrutura baseada em versões e datas, agrupando as alteraç
 
 Nenhuma alteração pendente.
 
+## [v1.4.2] - 2026-06-23
+
+### Added
+- Adicionado `app/static/css/dist/certificadora.bundle.css` para atualizar os estilos compilados do front-end.
+
 ## [v1.4.1] - 2026-06-15
 
 ### Changed
