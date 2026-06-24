@@ -36,6 +36,8 @@ htmlcov/
 
 build/
 dist/
+!app/static/css/dist/
+!app/static/css/dist/certificadora.bundle.css
 *.egg-info/
 
 # OS Files
